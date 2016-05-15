@@ -1,2 +1,2 @@
 # Project
-C++ binding for a high-precision library
+C++ binding for a high-accuracy library
