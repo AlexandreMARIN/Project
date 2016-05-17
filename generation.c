@@ -1,12 +1,12 @@
 
 #include "generation.h"
 
-	const char types[][20]={"char", "signed char", "unsigned char", "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t", "float", "double", "long double", "wf256_t", "wf512_t"};
+	const char types[][25]={"char", "signed char", "unsigned char", "short int", "unsigned short int", "int", "unsigned int", "long int", "unsigned long int", "long long int", "unsigned long long int", "float", "double", "wf256_t", "wf512_t"};
 
 	//redefinable C++ operators
 	const char op[][4]={"+", "-", "*", "/", "=", "+=", "-=", "*=", "/=", "<", ">", "<=", ">=", "==", "!="};
 
-	const char wf_size[][5] = {"", "", "", "", "", "", "", "", "", "", "", "", "256", "512"};
+	const char wf_size[][5] = {"", "", "", "", "", "", "", "", "", "", "", "", "", "256", "512"};
 
 void function_sign(char* dest, char* prefix, char* returned_type, char* name, int arg_nb, char** arg_types, char *suffix){
 
@@ -51,30 +51,24 @@ void constructor(FILE* f, int wf_no, int arg_no){
 	}
 
 	//signed int
-	if((arg_no<9 && arg_no%2==1 )||arg_no==0){
+	if((arg_no<11 && arg_no%2==1 )||arg_no==0){
 		fprintf(f, "\n%s::%s (const %s & v){\n\twidefloat_float64_t v2;\n\twidefloat_ext_convert_float64_from_signed_integer(&v2, (int64_t)v);\n\twidefloat_ext_convert_float64_to_float%s(&value, &v2);\n}\n", types[wf_no], types[wf_no], types[arg_no], wf_size[wf_no]);
 		return;
 	}
 	//unsigned int
-	if(arg_no<9 && arg_no%2==0){
+	if(arg_no<11 && arg_no%2==0){
 		fprintf(f, "\n%s::%s (const %s & v){\n\twidefloat_float64_t v2;\n\twidefloat_ext_convert_float64_from_unsigned_integer(&v2, (uint64_t)v);\n\twidefloat_ext_convert_float64_to_float%s(&value, &v2);\n}\n", types[wf_no], types[wf_no], types[arg_no], wf_size[wf_no]);
 		return;
 	}
 
 	//float
-	if(arg_no==9){
+	if(arg_no==11){
 		fprintf(f, "\n%s::%s (const float & v){\n\twidefloat_ext_float%s_from_ieee754_binary32(&value, v);\n}\n", types[wf_no], types[wf_no], wf_size[wf_no]);
 		return;
 	}
 	//double
-	if(arg_no==10){
+	if(arg_no==12){
 		fprintf(f, "\n%s::%s (const double & v){\n\twidefloat_ext_float%s_from_ieee754_binary64(&value, v);\n}\n", types[wf_no], types[wf_no], wf_size[wf_no]);
-		return;
-	}
-
-	//long double
-	if(arg_no==11){
-		fprintf(f, "\n%s::%s (const long double & v){\n\twidefloat_ext_float%s_from_ieee754_binary64(&value, (double)v);\n}\n", types[wf_no], types[wf_no], wf_size[wf_no]);
 		return;
 	}
 
@@ -87,29 +81,27 @@ void constructor(FILE* f, int wf_no, int arg_no){
 void cast(FILE* f, int wf_no, int cpp_no){
 
 	//signed integer
-	if(cpp_no==0 || (cpp_no<9 && cpp_no%2==1)){
+	if(cpp_no==0 || (cpp_no<11 && cpp_no%2==1)){
 		fprintf(f, "\n%s::operator %s() const{\n\tint64_t res;\n\twidefloat_ext_convert_float%s_to_signed_integer_mode_exact(&res, &value, WIDEFLOAT_ROUNDINGMODE_NEAREST);\n\treturn (%s)res;\n}\n", types[wf_no], types[cpp_no], wf_size[wf_no], types[cpp_no]);
 		return;
 	}
 
 	//unsigned integer
-	if(cpp_no<9 && cpp_no%2==0){
+	if(cpp_no<11 && cpp_no%2==0){
 		fprintf(f, "\n%s::operator %s() const{\n\tuint64_t res;\n\twidefloat_ext_convert_float%s_to_unsigned_integer_mode_exact(&res, &value, WIDEFLOAT_ROUNDINGMODE_NEAREST);\n\treturn (%s)res;\n}\n", types[wf_no], types[cpp_no], wf_size[wf_no], types[cpp_no]);
 		return;
 	}
 
 	//float
-	if(cpp_no==9){
+	if(cpp_no==11){
 		fprintf(f, "\n%s::operator float() const{\n\tfloat res;\n\twidefloat_ext_float%s_to_ieee754_binary32(&res, &value);\n\treturn res;\n}\n", types[wf_no], wf_size[wf_no]);
 		return;
 	}
 	//double
-	if(cpp_no==10){
+	if(cpp_no==12){
 		fprintf(f, "\n%s::operator double() const{\n\tdouble res;\n\twidefloat_ext_float%s_to_ieee754_binary64(&res, &value);\n\treturn res;\n}\n", types[wf_no], wf_size[wf_no]);
 		return;
 	}
-	//long double
-	fprintf(f, "\n%s::operator long double() const{\n\tdouble res;\n\twidefloat_ext_float%s_to_ieee754_binary64(&res, &value);\n\treturn (long double)res;\n}\n", types[wf_no], wf_size[wf_no]);
 }
 
 void arith(FILE* f, int arg1_no, int op_no, int arg2_no){

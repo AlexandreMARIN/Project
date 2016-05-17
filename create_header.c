@@ -3,29 +3,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-extern const char types[][20];
+extern const char types[][25];
 extern const char op[][4];
 extern const char wf_size[][5];
 
 int main(int argc, char* argv[]){
-
-	if(argc!=2){
-		return 1;
-	}
 
 
 	FILE* f;
 	int i, j, k;
 	char buffer[150];
 	char** args;
-	char type[20];
-	char name[20];
+	char type[50];
+	char name[50];
 	args = (char**)malloc(sizeof(char*)*3);
-	args[0] = (char*)malloc(sizeof(char)*20);
-	args[1] = (char*)malloc(sizeof(char)*20);
-	args[2] = (char*)malloc(sizeof(char)*20);
+	args[0] = (char*)malloc(sizeof(char)*50);
+	args[1] = (char*)malloc(sizeof(char)*50);
+	args[2] = (char*)malloc(sizeof(char)*50);
 
-	f = fopen(argv[1], "w");
+	f = fopen("wf_classes.hpp", "w");
 
 	//macros
 	fprintf(f, "#ifndef WF_CLASSES_H\n#define WF_CLASSES_H\n\nextern \"C\" {\n#include \"widefloat_float_types.h\"\n}\n\n\n");
@@ -167,7 +163,7 @@ int main(int argc, char* argv[]){
 		}
 
 		//conparisons
-		fprintf(f, "\n\n\t\t/*comparisons*/\n");
+		fprintf(f, "\n\n\t\t/* comparisons */\n");
 		strcpy(type, "bool");
 		for(j=COMP;j<OP_NB;j++){
 			name[8] = '\0';
@@ -202,13 +198,19 @@ int main(int argc, char* argv[]){
 		//Unary + -
 		fprintf(f, "\n\n\t\t/* unary + and - */\n\t\t%s operator+ () const;\n\t\t%s operator- () const;\n", types[i], types[i]);
 
-		//sqrt
-		fprintf(f, "\n\t\t/* square root */\n\t\tfriend %s sqrt(const %s &);\n\n", types[i], types[i]);
+		//sqrt : towards smaller wf types
+		fprintf(f, "\n\t\t/* square root */\n");
+		for(j=WF_TYPE;j<=i;j++){
+			fprintf(f, "\n\t\tfriend %s sqrt_to_%s(const %s &);", types[j], types[j], types[i]);
+		}
 
-		//fma
-		fprintf(f, "\t\t/* fma */\n\t\tfriend %s fma(const %s &, const %s &, const %s &);\n", types[i], types[i], types[i], types[i]);
+		//fma : towards smaller wf types
+		fprintf(f, "\t\t/* fma */\n");
+		for(j=WF_TYPE;j<=i;j++){
+			fprintf(f, "\n\t\tfriend %s fma_to_%s(const %s &, const %s &, const %s &);", types[j], types[j], types[i], types[i], types[i]);
+		}
 
-		//right brace
+		//right brace of the class definition
 		fprintf(f, "};\n\n");
 	}
 
