@@ -282,11 +282,163 @@ void arith(FILE* f, int arg1_no, int op_no, int arg2_no){
 
 void comp(FILE* f, int arg1_no, int op_no, int arg2_no){
 
+	fprintf(f, "\nbool operator ", types[arg1_no]);
 
+	//symb
+	switch(op_no){
+		case COMP :
+			fprintf(f, "< ");
+			break;
+		case COMP+1 :
+			fprintf(f, "> ");
+			break;
+		case COMP+2 :
+			fprintf(f, "<=");
+			break;
+		case COMP+3 :
+			fprintf(f, ">=");
+			break;
+		case COMP+4 :
+			fprintf(f, "==");
+			break;
+		case COMP+5 :
+			fprintf(f, "!=");
+			break;
+	}
 
+	fprintf(f, "(const %s &op1, const %s &op2){\n\t", types[arg1_no], types[arg2_no]);
 
+	//variable for the result
+	fprintf(f, "widefloat_comparison_t res;\n\t");
 
+	//cpp type
+	if(arg1_no<WF_TYPE){
+		fprintf(f, "widefloat_float%s_t op3;\n\t", wf_size[arg2_no]);
+		if(strcmp(types[arg2_no], "wf64_t")!=0 && strcmp(types[arg1_no], "double")!=0 && strcmp(types[arg1_no], "float")!=0){
+			fprintf(f, "widefloat_float64_t op3_64;\n\t");//we can convert integers only to float64
+		}
+		//construction of wf from cpp type
+		if(strcmp(types[arg1_no], "double")==0){
+			fprintf(f, "widefloat_ext_float%s_from_ieee754_binary64(&op3, op1);", wf_size[arg2_no]);
+		}else{
+			if(strcmp(types[arg1_no], "float")==0){
+				fprintf(f, "widefloat_ext_float%s_from_ieee754_binary32(&op3, op1);", wf_size[arg2_no]);
+			}else{
+				if(strcmp(types[arg2_no], "wf64_t")==0){
+					if(arg1_no==0 || arg1_no%2==1){
+						fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op3, (int64_t)op1);");
+					}else{
+						fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op3, (uint64_t)op1);");
+					}
+				}else{
+					if(arg1_no==0 || arg1_no%2==1){
+						fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op3_64, (int64_t)op1);\n\twidefloat_ext_convert_float64_to_float%s(&op3, &op3_64);", wf_size[arg2_no]);
+					}else{
+						fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op3_64, (uint64_t)op1);\n\twidefloat_ext_convert_float64_to_float%s(&op3, &op3_64);", wf_size[arg2_no]);
+					}
+				}
+			}
+		}
 
+		fprintf(f, "\n\twidefloat_ext_compare_");
+		if(strcmp(op[op_no], "==")==0 || strcmp(op[op_no], "!=")==0){
+			fprintf(f, "quiet");
+		}else{
+			fprintf(f, "signaling");
+		}
+		fprintf(f, "_float%s_float%s(&res, &op3, &(op2.value));\n\t", wf_size[arg2_no], wf_size[arg2_no]);
 
+	}
+
+	if(arg2_no<WF_TYPE){
+		fprintf(f, "widefloat_float%s_t op3;\n\t", wf_size[arg1_no]);
+		if(strcmp(types[arg1_no], "wf64_t")!=0 && strcmp(types[arg2_no], "double")!=0 && strcmp(types[arg2_no], "float")!=0){
+			fprintf(f, "widefloat_float64_t op3_64;\n\t");//we can convert integers only to float64
+		}
+		//construction of wf from cpp type
+		if(strcmp(types[arg2_no], "double")==0){
+			fprintf(f, "widefloat_ext_float%s_from_ieee754_binary64(&op3, op2);", wf_size[arg1_no]);
+		}else{
+			if(strcmp(types[arg2_no], "float")==0){
+				fprintf(f, "widefloat_ext_float%s_from_ieee754_binary32(&op3, op2);", wf_size[arg1_no]);
+			}else{
+				if(strcmp(types[arg1_no], "wf64_t")==0){
+					if(arg2_no==0 || arg2_no%2==1){
+						fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op3, (int64_t)op2);");
+					}else{
+						fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op3, (uint64_t)op2);");
+					}
+				}else{
+					if(arg2_no==0 || arg2_no%2==1){
+						fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op3_64, (int64_t)op2);\n\twidefloat_ext_convert_float64_to_float%s(&op3, &op3_64);", wf_size[arg1_no]);
+					}else{
+						fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op3_64, (uint64_t)op2);\n\twidefloat_ext_convert_float64_to_float%s(&op3, &op3_64);", wf_size[arg1_no]);
+					}
+				}
+			}
+		}
+
+		fprintf(f, "\n\twidefloat_ext_compare_");
+		if(strcmp(op[op_no], "==")==0 || strcmp(op[op_no], "!=")==0){
+			fprintf(f, "quiet");
+		}else{
+			fprintf(f, "signaling");
+		}
+		fprintf(f, "_float%s_float%s(&res, &(op1.value), &op3);\n\t", wf_size[arg1_no], wf_size[arg1_no]);
+
+	}
+
+	//wf type
+	if(arg1_no>=WF_TYPE && arg2_no>=WF_TYPE){
+		if(arg1_no!=arg2_no){
+			if(arg1_no<arg2_no){
+				fprintf(f, "widefloat_float%s_t op3;\n\t", wf_size[arg2_no]);
+				fprintf(f, "widefloat_ext_convert_float%s_to_float%s(&op3, &(op1.value));\n\t", wf_size[arg1_no], wf_size[arg2_no]);
+			}else{
+				fprintf(f, "widefloat_float%s_t op3;\n\t", wf_size[arg1_no]);
+				fprintf(f, "widefloat_ext_convert_float%s_to_float%s(&op3, &(op2.value));\n\t", wf_size[arg2_no], wf_size[arg1_no]);
+			}
+		}
+
+		fprintf(f, "\n\twidefloat_ext_compare_");
+		if(strcmp(op[op_no], "==")==0 || strcmp(op[op_no], "!=")==0){
+			fprintf(f, "quiet");
+		}else{
+			fprintf(f, "signaling");
+		}
+
+		if(arg1_no==arg2_no){
+			fprintf(f, "_float%s_float%s(&res, &(op1.value), &(op2.value));\n\t", wf_size[arg2_no], wf_size[arg2_no]);
+		}else{
+			if(arg1_no>arg2_no){
+				fprintf(f, "_float%s_float%s(&res, &(op1.value), &op3);\n\t", wf_size[arg1_no], wf_size[arg1_no]);
+			}else{
+				fprintf(f, "_float%s_float%s(&res, &op3, &(op2.value));\n\t", wf_size[arg2_no], wf_size[arg2_no]);
+			}
+		}
+	}
+
+	//returns true or false
+	switch(op_no){
+		case COMP:/* < */
+			fprintf(f, "if(res==WIDEFLOAT_COMPARISON_LESS){");
+			break;
+		case COMP+1:/* > */
+			fprintf(f, "if(res==WIDEFLOAT_COMPARISON_GREATER){");
+			break;
+		case COMP+2:/* <= */
+			fprintf(f, "if(res==WIDEFLOAT_COMPARISON_LESS || res==WIDEFLOAT_COMPARISON_EQUAL){");
+			break;
+		case COMP+3:/* >= */
+			fprintf(f, "if(res==WIDEFLOAT_COMPARISON_GREATER || res==WIDEFLOAT_COMPARISON_EQUAL){");
+			break;
+		case COMP+4:/* == */
+			fprintf(f, "if(res==WIDEFLOAT_COMPARISON_EQUAL){");
+			break;
+		case COMP+5:/* != */
+			fprintf(f, "if(res!=WIDEFLOAT_COMPARISON_EQUAL){");
+			break;
+	}
+	fprintf(f, "\n\t\treturn true;\n\t}\n\treturn false;\n}\n");
 
 }

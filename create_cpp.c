@@ -58,6 +58,22 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+	//comparisons
+	fprintf(f, "\n\n\t/* comparisons */\n");
+	for(i=COMP;i<COMP+6;i++){
+		for(j=CPP_TYPE;j<TYPE_NB;j++){
+			for(k=WF_TYPE;k<TYPE_NB;k++){
+				comp(f, j, i, k);
+			}
+		}
+		for(j=WF_TYPE;j<TYPE_NB;j++){
+			for(k=CPP_TYPE;k<WF_TYPE;k++){
+				comp(f, j, i, k);
+			}
+		}
+	}
+
+
 	fclose(f);
 
 
