@@ -17,4 +17,6 @@
 	void arith(FILE* f, int arg1_no, int op_no, int arg2_no);
 
 	void comp(FILE* f, int arg1_no, int op_no, int arg2_no);
+
+	void assign(FILE* f, int wf_no, int arg_no);
 #endif

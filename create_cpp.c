@@ -73,6 +73,16 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+	//assignments
+	fprintf(f, "\n\n\t/* assignments */\n");
+	for(i=WF_TYPE;i<TYPE_NB;i++){
+		for(j=CPP_TYPE;j<TYPE_NB;j++){
+			if(j==i){
+				continue;
+			}
+			assign(f, i, j);
+		}
+	}
 
 	fclose(f);
 

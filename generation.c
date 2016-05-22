@@ -442,3 +442,32 @@ void comp(FILE* f, int arg1_no, int op_no, int arg2_no){
 	fprintf(f, "\n\t\treturn true;\n\t}\n\treturn false;\n}\n");
 
 }
+
+/*assignment as member !*/
+void assign(FILE* f, int wf_no, int arg_no){
+
+	fprintf(f, "\n%s %s::operator= (const %s &op){\n", types[wf_no], types[wf_no], types[arg_no]);
+
+	if(arg_no>=WF_TYPE){
+		fprintf(f, "\twidefloat_ext_convert_float%s_to_float%s(&value, &(op.value));\n\treturn *this;\n}\n", wf_size[arg_no], wf_size[wf_no]);
+		return;
+	}
+
+	fprintf(f, "\twidefloat_float64_t op2;\n\t");
+	//construction of float64 from cpp type
+	if(strcmp(types[arg_no], "double")==0){
+		fprintf(f, "widefloat_ext_float64_from_ieee754_binary64(&op2, op);");
+	}else{
+		if(strcmp(types[arg_no], "float")==0){
+			fprintf(f, "widefloat_ext_float64_from_ieee754_binary32(&op2, op);");
+		}else{
+			if(arg_no==0 || arg_no%2==1){
+				fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op2, (int64_t)op);");
+			}else{
+				fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op2, (uint64_t)op);");
+			}
+		}
+	}
+
+	fprintf(f, "\n\twidefloat_ext_convert_float64_to_float%s(&value, &op2);\n\treturn *this;\n}\n", wf_size[wf_no]);
+}
