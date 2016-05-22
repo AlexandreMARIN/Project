@@ -8,6 +8,8 @@
 
 	const char wf_size[][5] = {"", "", "", "", "", "", "", "", "", "", "", "", "", "256", "512"};
 
+	const char range[][2][15] = {{"CHAR_MIN", "CHAR_MAX"}, {"SCHAR_MIN", "SCHAR_MAX"}, {"0", "UCHAR_MAX"}, {"SHRT_MIN", "SHRT_MAX"}, {"0", "USHRT_MAX"}, {"INT_MIN", "INT_MAX"}, {"0", "UINT_MAX"}, {"LONG_MIN", "LONG_MAX"}, {"0", "ULONG_MAX"}};
+
 void function_sign(char* dest, char* prefix, char* returned_type, char* name, int arg_nb, char** arg_types, char *suffix){
 
 	//'dest' is supposed wide enough
@@ -82,13 +84,23 @@ void cast(FILE* f, int wf_no, int cpp_no){
 
 	//signed integer
 	if(cpp_no==0 || (cpp_no<11 && cpp_no%2==1)){
-		fprintf(f, "\n%s::operator %s() const{\n\tint64_t res;\n\twidefloat_ext_convert_float%s_to_signed_integer_mode_exact(&res, &value, WIDEFLOAT_ROUNDINGMODE_NEAREST);\n\treturn (%s)res;\n}\n", types[wf_no], types[cpp_no], wf_size[wf_no], types[cpp_no]);
+		fprintf(f, "\n%s::operator %s() const{\n\tint64_t res;\n\twidefloat_roundingmode_t mode = widefloat_ext_get_rounding_mode();\n\twidefloat_ext_convert_float%s_to_signed_integer_mode_exact(&res, &value, mode);", types[wf_no], types[cpp_no], wf_size[wf_no]);
+		//overflow risk when returned type is smaller than int64_t =long int?
+		if(strcmp(types[cpp_no], "long long int")!=0){
+			fprintf(f, "\n\tif((res < (int64_t)%s)){\n\t\tif(mode==WIDEFLOAT_ROUNDINGMODE_NEAREST || mode==WIDEFLOAT_ROUNDINGMODE_DOWN){\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INEXACT);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_OVERFLOW);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INVALID);\n\t\t}\n\t\treturn (%s)%s;\n\t}\n", range[cpp_no][0], types[cpp_no], range[cpp_no][0]);
+			fprintf(f, "\n\tif((res > (int64_t)%s)){\n\t\tif(mode==WIDEFLOAT_ROUNDINGMODE_NEAREST || mode==WIDEFLOAT_ROUNDINGMODE_UP){\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INEXACT);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_OVERFLOW);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INVALID);\n\t\t}\n\t\treturn (%s)%s;\n\t}\n", range[cpp_no][1], types[cpp_no], range[cpp_no][1]);
+		}
+		fprintf(f, "\n\treturn (%s)res;\n}\n", types[cpp_no]);
 		return;
 	}
 
 	//unsigned integer
 	if(cpp_no<11 && cpp_no%2==0){
-		fprintf(f, "\n%s::operator %s() const{\n\tuint64_t res;\n\twidefloat_ext_convert_float%s_to_unsigned_integer_mode_exact(&res, &value, WIDEFLOAT_ROUNDINGMODE_NEAREST);\n\treturn (%s)res;\n}\n", types[wf_no], types[cpp_no], wf_size[wf_no], types[cpp_no]);
+		fprintf(f, "\n%s::operator %s() const{\n\tuint64_t res;\n\twidefloat_roundingmode_t mode = widefloat_ext_get_rounding_mode();\n\twidefloat_ext_convert_float%s_to_unsigned_integer_mode_exact(&res, &value, mode);", types[wf_no], types[cpp_no], wf_size[wf_no]);
+		if(strcmp(types[cpp_no], "unsigned long long int")!=0){
+			fprintf(f, "\n\tif((res > (uint64_t)%s)){\n\t\tif(mode==WIDEFLOAT_ROUNDINGMODE_NEAREST || mode==WIDEFLOAT_ROUNDINGMODE_UP){\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INEXACT);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_OVERFLOW);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INVALID);\n\t\t}\n\t\treturn (%s)%s;\n\t}\n", range[cpp_no][1], types[cpp_no], range[cpp_no][1]);
+		}
+		fprintf(f, "\n\treturn (%s)res;\n}\n", types[cpp_no]);
 		return;
 	}
 
@@ -112,7 +124,7 @@ void arith(FILE* f, int arg1_no, int op_no, int arg2_no){
 		fprintf(f, "\n%s operator ", types[arg2_no]);
 	}
 
-	//sym
+	//symb
 	switch(op_no){
 		case ARITH :
 			fprintf(f, "+ ");
@@ -138,7 +150,33 @@ void arith(FILE* f, int arg1_no, int op_no, int arg2_no){
 
 	//cpp type
 	if(arg1_no<WF_TYPE){
-		fprintf(f, "%s op3 = op1;\n\twidefloat_ext_", types[arg2_no]);
+		fprintf(f, "widefloat_float%s_t op3;\n\t", wf_size[arg2_no]);
+		if(strcmp(types[arg2_no], "wf64_t")!=0 && strcmp(types[arg1_no], "double")!=0 && strcmp(types[arg1_no], "float")!=0){
+			fprintf(f, "widefloat_float64_t op3_64;\n\t");//we can convert integers only to float64
+		}
+		//construction of wf from cpp type
+		if(strcmp(types[arg1_no], "double")==0){
+			fprintf(f, "widefloat_ext_float%s_from_ieee754_binary64(&op3, op1);", wf_size[arg2_no]);
+		}else{
+			if(strcmp(types[arg1_no], "float")==0){
+				fprintf(f, "widefloat_ext_float%s_from_ieee754_binary32(&op3, op1);", wf_size[arg2_no]);
+			}else{
+				if(strcmp(types[arg2_no], "wf64_t")==0){
+					if(arg1_no==0 || arg1_no%2==1){
+						fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op3, (int64_t)op1);");
+					}else{
+						fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op3, (uint64_t)op1);");
+					}
+				}else{
+					if(arg1_no==0 || arg1_no%2==1){
+						fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op3_64, (int64_t)op1);\n\twidefloat_ext_convert_float64_to_float%s(&op3, &op3_64);", wf_size[arg2_no]);
+					}else{
+						fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op3_64, (uint64_t)op1);\n\twidefloat_ext_convert_float64_to_float%s(&op3, &op3_64);", wf_size[arg2_no]);
+					}
+				}
+			}
+		}
+		fprintf(f, "\n\twidefloat_ext_");
 		switch(op_no){
 			case ARITH :
 				fprintf(f, "add");
@@ -153,12 +191,38 @@ void arith(FILE* f, int arg1_no, int op_no, int arg2_no){
 				fprintf(f, "div");
 				break;
 		}
-		fprintf(f, "_float%s_float%s_float%s(&(res.value), &(op2.value), &(op3.value));\n\treturn res;\n}\n", wf_size[arg2_no], wf_size[arg2_no], wf_size[arg2_no]);
+		fprintf(f, "_float%s_float%s_float%s(&(res.value), &op3, &(op2.value));\n\treturn res;\n}\n", wf_size[arg2_no], wf_size[arg2_no], wf_size[arg2_no]);
 		return;
 	}
 
 	if(arg2_no<WF_TYPE){
-		fprintf(f, "%s op3 = op2;\n\twidefloat_ext_", types[arg1_no]);
+		fprintf(f, "widefloat_float%s_t op3;\n\t", wf_size[arg1_no]);
+		if(strcmp(types[arg1_no], "wf64_t")!=0 && strcmp(types[arg2_no], "double")!=0 && strcmp(types[arg2_no], "float")!=0){
+			fprintf(f, "widefloat_float64_t op3_64;\n\t");//we can convert integers only to float64
+		}
+		//construction of wf from cpp type
+		if(strcmp(types[arg2_no], "double")==0){
+			fprintf(f, "widefloat_ext_float%s_from_ieee754_binary64(&op3, op2);", wf_size[arg1_no]);
+		}else{
+			if(strcmp(types[arg2_no], "float")==0){
+				fprintf(f, "widefloat_ext_float%s_from_ieee754_binary32(&op3, op2);", wf_size[arg1_no]);
+			}else{
+				if(strcmp(types[arg1_no], "wf64_t")==0){
+					if(arg2_no==0 || arg2_no%2==1){
+						fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op3, (int64_t)op2);");
+					}else{
+						fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op3, (uint64_t)op2);");
+					}
+				}else{
+					if(arg2_no==0 || arg2_no%2==1){
+						fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op3_64, (int64_t)op2);\n\twidefloat_ext_convert_float64_to_float%s(&op3, &op3_64);", wf_size[arg1_no]);
+					}else{
+						fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op3_64, (uint64_t)op2);\n\twidefloat_ext_convert_float64_to_float%s(&op3, &op3_64);", wf_size[arg1_no]);
+					}
+				}
+			}
+		}
+		fprintf(f, "\n\twidefloat_ext_");
 		switch(op_no){
 			case ARITH :
 				fprintf(f, "add");
@@ -173,20 +237,23 @@ void arith(FILE* f, int arg1_no, int op_no, int arg2_no){
 				fprintf(f, "div");
 				break;
 		}
-		fprintf(f, "_float%s_float%s_float%s(&(res.value), &(op1.value), &(op3.value));\n\treturn res;\n}\n", wf_size[arg1_no], wf_size[arg1_no], wf_size[arg1_no]);
+		fprintf(f, "_float%s_float%s_float%s(&(res.value), &(op1.value), &op3);\n\treturn res;\n}\n", wf_size[arg1_no], wf_size[arg1_no], wf_size[arg1_no]);
 		return;
 	}
+
 	//wf type
-	if(arg1_no<arg2_no){
-		fprintf(f, "%s op3 = op1;\n\t", types[arg2_no]);
-	}else{
-		fprintf(f, "%s op3 = op2;\n\t", types[arg1_no]);
+	if(arg1_no!=arg2_no){
+		if(arg1_no<arg2_no){
+			fprintf(f, "widefloat_float%s_t op3;\n\t", wf_size[arg2_no]);
+			fprintf(f, "widefloat_ext_convert_float%s_to_float%s(&op3, &(op1.value));\n\t", wf_size[arg1_no], wf_size[arg2_no]);
+		}else{
+			fprintf(f, "widefloat_float%s_t op3;\n\t", wf_size[arg1_no]);
+			fprintf(f, "widefloat_ext_convert_float%s_to_float%s(&op3, &(op2.value));\n\t", wf_size[arg2_no], wf_size[arg1_no]);
+		}
 	}
-	if(arg1_no>arg2_no){
-		fprintf(f, "widefloat_ext_", types[arg1_no]);
-	}else{
-		fprintf(f, "widefloat_ext_", types[arg2_no]);
-	}
+
+	fprintf(f, "widefloat_ext_");
+
 	switch(op_no){
 		case ARITH :
 			fprintf(f, "add");
@@ -201,10 +268,25 @@ void arith(FILE* f, int arg1_no, int op_no, int arg2_no){
 			fprintf(f, "div");
 			break;
 	}
-	if(arg1_no>arg2_no){
-		fprintf(f, "_float%s_float%s_float%s(&(res.value), &(op1.value), &(op3.value));\n\treturn res;\n}\n", wf_size[arg1_no], wf_size[arg1_no], wf_size[arg1_no]);
-	}else{
-		fprintf(f, "_float%s_float%s_float%s(&(res.value), &(op3.value), &(op2.value));\n\treturn res;\n}\n", wf_size[arg2_no], wf_size[arg2_no], wf_size[arg2_no]);
+	if(arg1_no==arg2_no){
+		fprintf(f, "_float%s_float%s_float%s(&(res.value), &(op1.value), &(op2.value));\n\treturn res;\n}\n", wf_size[arg1_no], wf_size[arg1_no], wf_size[arg1_no]);
+		return;
 	}
+	if(arg1_no>arg2_no){
+		fprintf(f, "_float%s_float%s_float%s(&(res.value), &(op1.value), &op3);\n\treturn res;\n}\n", wf_size[arg1_no], wf_size[arg1_no], wf_size[arg1_no]);
+	}else{
+		fprintf(f, "_float%s_float%s_float%s(&(res.value), &op3, &(op2.value));\n\treturn res;\n}\n", wf_size[arg2_no], wf_size[arg2_no], wf_size[arg2_no]);
+	}
+
+}
+
+void comp(FILE* f, int arg1_no, int op_no, int arg2_no){
+
+
+
+
+
+
+
 
 }

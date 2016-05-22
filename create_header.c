@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
 	f = fopen("wf_classes.hpp", "w");
 
 	//macros
-	fprintf(f, "#ifndef WF_CLASSES_H\n#define WF_CLASSES_H\n\nextern \"C\" {\n#include \"widefloat_float_types.h\"\n}\n\n\n");
+	fprintf(f, "#ifndef WF_CLASSES_HPP\n#define WF_CLASSES_HPP\n\nextern \"C\" {\n#include \"widefloat_float_types.h\"\n}\n\n#include <climits>\n");
 
 	//declaration of all widefloat classes
 	fprintf(f, "/*Declaration of all widefloat classes*/\n");
@@ -34,9 +34,12 @@ int main(int argc, char* argv[]){
 		fprintf(f, ";\n");
 	}
 
+	//tool class for state (rounding mode and flags)
+	fprintf(f, "\n\n/* tool class for state (rounding mode and flags) */");
+	fprintf(f, "\n\nclass wf_fpstate {\n\tprivate :\n\twf_fpstate();\n\n\tpublic :\n\n\t/* setters */\n\n\tstatic int set_flags(widefloat_flags_t newflags);\n\tstatic int set_rounding_mode(widefloat_roundingmode_t new_rounding_mode);\n\n\t/* getters */\n\n\tstatic widefloat_flags_t get_flags();\n\tstatic widefloat_roundingmode_t get_rounding_mode();\n\n\t/* function which enables us to raise flags */\n\n\tstatic int raise_flags(widefloat_flags_t newflags);\n\n};\n\n\n");
 
-	//classes definition
-	fprintf(f, "\n\n\n/*classes definition*/\n\n");
+	//wf classes definition
+	fprintf(f, "\n\n\n/*widefloat classes definition*/\n\n");
 
 	for(i=WF_TYPE;i<TYPE_NB;i++){
 
@@ -162,7 +165,7 @@ int main(int argc, char* argv[]){
 			fprintf(f, "\n");
 		}
 
-		//conparisons
+		//comparisons
 		fprintf(f, "\n\n\t\t/* comparisons */\n");
 		strcpy(type, "bool");
 		for(j=COMP;j<OP_NB;j++){
@@ -205,7 +208,7 @@ int main(int argc, char* argv[]){
 		}
 
 		//fma : towards smaller wf types
-		fprintf(f, "\t\t/* fma */\n");
+		fprintf(f, "\n\n\t\t/* fma */\n");
 		for(j=WF_TYPE;j<=i;j++){
 			fprintf(f, "\n\t\tfriend %s fma_to_%s(const %s &, const %s &, const %s &);", types[j], types[j], types[i], types[i], types[i]);
 		}
