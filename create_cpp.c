@@ -84,6 +84,49 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+	//extended assignments
+	fprintf(f, "\n\n\t/* extended assignments*/\n");
+	for(i=ASSIGN+1;i<=ASSIGN+4;i++){
+		for(j=CPP_TYPE;j<TYPE_NB;j++){
+			for(k=WF_TYPE;k<TYPE_NB;k++){
+				ext_assign(f, j, i, k);
+			}
+		}
+		for(j=WF_TYPE;j<TYPE_NB;j++){
+			for(k=CPP_TYPE;k<WF_TYPE;k++){
+				ext_assign(f, j, i, k);
+			}
+		}
+	}
+
+	/* + */
+	fprintf(f, "\n\t/* unary plus */\n\n");
+	for(i=WF_TYPE;i<TYPE_NB;i++){
+		plus(f, i);
+	}
+
+	/* - */
+	fprintf(f, "\n\t/* unary minus */\n\n");
+	for(i=WF_TYPE;i<TYPE_NB;i++){
+		minus(f, i);
+	}
+
+	/* sqrt */
+	fprintf(f, "\n\t/* square root functions */\n");
+	for(i=WF_TYPE;i<TYPE_NB;i++){
+		for(j=WF_TYPE;j<=i;j++){
+			wf_sqrt(f, i, j);
+		}
+	}
+
+	/* fma */
+	fprintf(f, "\n\t/* floating-point multiply and add */\n");
+	for(i=WF_TYPE;i<TYPE_NB;i++){
+		for(j=WF_TYPE;j<=i;j++){
+			wf_fma(f, i, j);
+		}
+	}
+
 	fclose(f);
 
 

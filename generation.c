@@ -471,3 +471,174 @@ void assign(FILE* f, int wf_no, int arg_no){
 
 	fprintf(f, "\n\twidefloat_ext_convert_float64_to_float%s(&value, &op2);\n\treturn *this;\n}\n", wf_size[wf_no]);
 }
+
+void ext_assign(FILE* f, int arg1_no, int op_no, int arg2_no){
+
+	fprintf(f, "\n%s operator%s(%s &op1, const %s &op2){\n\t", types[arg1_no], op[op_no], types[arg1_no], types[arg2_no]);
+
+	if(arg1_no==arg2_no){
+		fprintf(f, "widefloat_float%s_t copy = op1.value;\n\twidefloat_ext_", wf_size[arg1_no]);
+		switch(op_no){
+			case ASSIGN+1:
+				fprintf(f, "add");
+				break;
+			case ASSIGN+2:
+				fprintf(f, "sub");
+				break;
+			case ASSIGN+3:
+				fprintf(f, "mul");
+				break;
+			case ASSIGN+4:
+				fprintf(f, "div");
+				break;
+		}
+		fprintf(f, "_float%s_float%s_float%s(&(op1.value), &copy, &(op2.value));\n\treturn op1;\n}\n", wf_size[arg1_no], wf_size[arg1_no], wf_size[arg1_no]);
+		return;
+	}
+
+	if(arg1_no>arg2_no){
+		fprintf(f, "widefloat_float%s_t op3 = op1.value, op4;\n\t", wf_size[arg1_no]);
+		if(strcmp(types[arg1_no], "wf64_t")!=0 && strcmp(types[arg2_no], "double")!=0 && strcmp(types[arg2_no], "float")!=0 && arg2_no<WF_TYPE){
+			fprintf(f, "widefloat_float64_t op4_64;\n\t");//we can convert integers only to float64
+		}
+		if(arg2_no>=WF_TYPE){
+			fprintf(f, "widefloat_ext_convert_float%s_to_float%s(&op4, &(op2.value));", wf_size[arg2_no], wf_size[arg1_no]);
+		}else{
+			//construction of wf from cpp type
+			if(strcmp(types[arg2_no], "double")==0){
+				fprintf(f, "widefloat_ext_float%s_from_ieee754_binary64(&op4, op2);", wf_size[arg1_no]);
+			}else{
+				if(strcmp(types[arg2_no], "float")==0){
+					fprintf(f, "widefloat_ext_float%s_from_ieee754_binary32(&op4, op2);", wf_size[arg1_no]);
+				}else{
+					if(strcmp(types[arg1_no], "wf64_t")==0){
+						if(arg2_no==0 || arg2_no%2==1){
+							fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op4, (int64_t)op2);");
+						}else{
+							fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op4, (uint64_t)op2);");
+						}
+					}else{
+						if(arg2_no==0 || arg2_no%2==1){
+							fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op4_64, (int64_t)op2);\n\twidefloat_ext_convert_float64_to_float%s(&op4, &op4_64);", wf_size[arg1_no]);
+						}else{
+							fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op4_64, (uint64_t)op2);\n\twidefloat_ext_convert_float64_to_float%s(&op4, &op4_64);", wf_size[arg1_no]);
+						}
+					}
+				}
+			}
+		}
+		fprintf(f, "\n\twidefloat_ext_");
+		switch(op_no){
+			case ASSIGN+1:
+				fprintf(f, "add");
+				break;
+			case ASSIGN+2:
+				fprintf(f, "sub");
+				break;
+			case ASSIGN+3:
+				fprintf(f, "mul");
+				break;
+			case ASSIGN+4:
+				fprintf(f, "div");
+				break;
+		}
+		fprintf(f, "_float%s_float%s_float%s(&(op1.value), &op3, &op4);\n\treturn op1;\n}\n", wf_size[arg1_no], wf_size[arg1_no], wf_size[arg1_no]);
+		return;
+	}
+
+//arg1_no<arg2_no
+	fprintf(f, "%s res;\n\t", types[arg2_no]);
+
+	if(arg1_no<WF_TYPE){
+		fprintf(f, "widefloat_float%s_t op3;\n\t", wf_size[arg2_no]);
+		if(strcmp(types[arg2_no], "wf64_t")!=0 && strcmp(types[arg1_no], "double")!=0 && strcmp(types[arg1_no], "float")!=0){
+			fprintf(f, "widefloat_float64_t op3_64;\n\t");//we can convert integers only to float64
+		}
+		//construction of wf from cpp type
+		if(strcmp(types[arg1_no], "double")==0){
+			fprintf(f, "widefloat_ext_float%s_from_ieee754_binary64(&op3, op1);", wf_size[arg2_no]);
+		}else{
+			if(strcmp(types[arg1_no], "float")==0){
+				fprintf(f, "widefloat_ext_float%s_from_ieee754_binary32(&op3, op1);", wf_size[arg2_no]);
+			}else{
+				if(strcmp(types[arg2_no], "wf64_t")==0){
+					if(arg1_no==0 || arg1_no%2==1){
+						fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op3, (int64_t)op1);");
+					}else{
+						fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op3, (uint64_t)op1);");
+					}
+				}else{
+					if(arg1_no==0 || arg1_no%2==1){
+						fprintf(f, "widefloat_ext_convert_float64_from_signed_integer(&op3_64, (int64_t)op1);\n\twidefloat_ext_convert_float64_to_float%s(&op3, &op3_64);", wf_size[arg2_no]);
+					}else{
+						fprintf(f, "widefloat_ext_convert_float64_from_unsigned_integer(&op3_64, (uint64_t)op1);\n\twidefloat_ext_convert_float64_to_float%s(&op3, &op3_64);", wf_size[arg2_no]);
+					}
+				}
+			}
+		}
+		fprintf(f, "\n\twidefloat_ext_");
+		switch(op_no){
+			case ASSIGN+1 :
+				fprintf(f, "add");
+				break;
+			case ASSIGN+2 :
+				fprintf(f, "sub");
+				break;
+			case ASSIGN+3 :
+				fprintf(f, "mul");
+				break;
+			case ASSIGN+4 :
+				fprintf(f, "div");
+				break;
+		}
+		fprintf(f, "_float%s_float%s_float%s(&(res.value), &op3, &(op2.value));\n\top1 = (%s)res;\n\treturn op1;\n}\n", wf_size[arg2_no], wf_size[arg2_no], wf_size[arg2_no], types[arg1_no]);
+		return;
+	}
+//arg1_no>=WF_TYPE
+	fprintf(f, "widefloat_float%s_t op3;\n\t", wf_size[arg2_no]);
+	fprintf(f, "widefloat_ext_convert_float%s_to_float%s(&op3, &(op1.value));\n\t", wf_size[arg1_no], wf_size[arg2_no]);
+
+	fprintf(f, "widefloat_ext_");
+
+	switch(op_no){
+		case ASSIGN+1 :
+			fprintf(f, "add");
+			break;
+		case ASSIGN+2 :
+			fprintf(f, "sub");
+			break;
+		case ASSIGN+3 :
+			fprintf(f, "mul");
+			break;
+		case ASSIGN+4 :
+			fprintf(f, "div");
+			break;
+	}
+	fprintf(f, "_float%s_float%s_float%s(&(res.value), &op3, &(op2.value));\n\twidefloat_ext_convert_float%s_to_float%s(&(op1.value), &(res.value));\n\treturn op1;\n}\n", wf_size[arg2_no], wf_size[arg2_no], wf_size[arg2_no], wf_size[arg2_no], wf_size[arg1_no]);
+
+}
+
+void plus(FILE* f, int wf_no){
+
+	fprintf(f, "\n%s %s::operator + () const{\n\treturn *this;\n}\n", types[wf_no], types[wf_no]);
+
+}
+
+
+void minus(FILE* f, int wf_no){
+
+	fprintf(f, "\n%s %s::operator -() const {\n\t%s res;\n\twidefloat_ext_neg_float%s_float%s(&(res.value), &value);\n\treturn res;\n}\n", types[wf_no], types[wf_no], types[wf_no], wf_size[wf_no], wf_size[wf_no]);
+
+}
+
+void wf_sqrt(FILE* f, int wf_in, int wf_out){
+
+	fprintf(f, "\n%s sqrt_to_%s(const %s &op){\n\t%s res;\n\twidefloat_ext_sqrt_float%s_float%s(&(res.value), &(op.value));\n\treturn res;\n}\n", types[wf_out], types[wf_out], types[wf_in], types[wf_out], wf_size[wf_in], wf_size[wf_out]);
+
+}
+
+void wf_fma(FILE* f, int wf_in, int wf_out){
+
+	fprintf(f, "\n%s fma_to_%s(const %s &op1, const %s &op2, const %s &op3){\n\t%s res;\n\twidefloat_ext_fma_float%s_float%s_float%s_float%s(&(res.value), &(op1.value), &(op2.value), &(op3.value));\n\treturn res;\n}\n", types[wf_out], types[wf_out], types[wf_in], types[wf_in], types[wf_in], types[wf_out], wf_size[wf_in], wf_size[wf_in], wf_size[wf_in], wf_size[wf_out]);
+
+}

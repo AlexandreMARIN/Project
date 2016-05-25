@@ -47,7 +47,7 @@ int main(int argc, char* argv[]){
 		fprintf(f, "class %s {\n\twidefloat_float%s_t value;//value\n\n", types[i], wf_size[i]);
 
 		//friendship between widefloat classes-for constructors/assignments
-		fprintf(f, "\t/*friendship between widefloat classes for constructors and assignments*/\n");
+		fprintf(f, "\t/*friendship between widefloat classes for constructors and assignments (mostly) */\n");
 		for(j=WF_TYPE;j<TYPE_NB;j++){
 			if(j==i){
 				continue;
@@ -201,16 +201,22 @@ int main(int argc, char* argv[]){
 		//Unary + -
 		fprintf(f, "\n\n\t\t/* unary + and - */\n\t\t%s operator+ () const;\n\t\t%s operator- () const;\n", types[i], types[i]);
 
-		//sqrt : towards smaller wf types
+		//sqrt : towards smaller wf types/friendship with functions which use the widefloat (therefore it is the returned type)
 		fprintf(f, "\n\t\t/* square root */\n");
 		for(j=WF_TYPE;j<=i;j++){
 			fprintf(f, "\n\t\tfriend %s sqrt_to_%s(const %s &);", types[j], types[j], types[i]);
 		}
+		for(j=i+1;j<TYPE_NB;j++){
+			fprintf(f, "\n\t\tfriend %s sqrt_to_%s(const %s &);", types[i], types[i], types[j]);//not obvious
+		}
 
-		//fma : towards smaller wf types
+		//fma : towards smaller wf types/like sqrt : frienship must be declared for some functions
 		fprintf(f, "\n\n\t\t/* fma */\n");
 		for(j=WF_TYPE;j<=i;j++){
 			fprintf(f, "\n\t\tfriend %s fma_to_%s(const %s &, const %s &, const %s &);", types[j], types[j], types[i], types[i], types[i]);
+		}
+		for(j=i+1;j<TYPE_NB;j++){
+			fprintf(f, "\n\t\tfriend %s fma_to_%s(const %s &, const %s &, const %s &);", types[i], types[i], types[j], types[j], types[j]);
 		}
 
 		//right brace of the class definition

@@ -19,4 +19,14 @@
 	void comp(FILE* f, int arg1_no, int op_no, int arg2_no);
 
 	void assign(FILE* f, int wf_no, int arg_no);
+
+	void ext_assign(FILE* f, int arg1_no, int op_no, int arg2_no);
+
+	void plus(FILE* f, int wf_no);
+
+	void minus(FILE* f, int wf_no);
+
+	void wf_sqrt(FILE* f, int wf_in, int wf_out);
+
+	void wf_fma(FILE* f, int wf_in, int wf_out);
 #endif
