@@ -1,13 +1,17 @@
 
 CFLAGS = -Wall -O3
 CXXFLAGS = -Wall -g -O0
-EXEC = create_header create_cpp test_horner interp_lag interp
+EXEC = create_header create_cpp create_test test_horner interp_lag interp
 
-all: create_header create_cpp
+all: create_header create_cpp create_test
 	@./create_header
 	@./create_cpp
-	@echo "files \"wf_classes.cpp\" and \"wf_classes.hpp\" have just been generated"
+	@./create_test
+	@echo "files \"wf_classes.cpp\", \"wf_classes.hpp\" and \"wf_test.cpp\" have just been generated"
 	@make test_use
+	@make wf_test
+	@echo "\nThat program tests all functions :\n"
+	@./wf_test
 
 
 #program which uses wf types
@@ -27,6 +31,11 @@ widefloat_float.o: widefloat_float.c
 #binding
 wf_classes.o: wf_classes.cpp
 	@g++ $(CXXFLAGS) -c wf_classes.cpp
+
+
+#for generating test
+create_test: create_test.c
+	@gcc -o create_test create_test.c
 
 
 #for generating header file and cpp file

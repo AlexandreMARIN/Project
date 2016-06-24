@@ -14,7 +14,7 @@ int main(int argc, char* argv[]){
 	f = fopen("wf_classes.cpp", "w");
 
 	//macros
-	fprintf(f, "extern \"C\" {\n#include \"widefloat_float_ext.h\"\n}\n\n\n#include \"wf_classes.hpp\"\n\n\n");
+	fprintf(f, "extern \"C\" {\n#include \"widefloat_float_ext.h\"\n}\n\n\n#include \"wf_classes.hpp\"\n\n#include <climits> //for the highest values of integers\n#include <cmath> //for NAN\n\n\n");
 
 	//tool for global state
 	fprintf(f, "\n\n\t/* functions concerning global state (setters, getters, function for raising) */\nwidefloat_flags_t wf_fpstate::get_flags(){\nreturn widefloat_ext_get_flags();\n}\n\nint wf_fpstate::set_flags(widefloat_flags_t newflags){\nreturn widefloat_ext_set_flags(newflags);\n}\n\nint wf_fpstate::raise_flags(widefloat_flags_t newflags){\nreturn widefloat_ext_raise_flags(newflags);\n}\n\nwidefloat_roundingmode_t wf_fpstate::get_rounding_mode(){\nreturn widefloat_ext_get_rounding_mode();\n}\n\nint wf_fpstate::set_rounding_mode(widefloat_roundingmode_t new_rounding_mode){\nreturn widefloat_ext_set_rounding_mode(new_rounding_mode);\n}\n\n");

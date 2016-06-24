@@ -48,7 +48,7 @@ void constructor(FILE* f, int wf_no, int arg_no){
 
 	//void : -1
 	if(arg_no==-1){
-		fprintf(f, "\n%s::%s (){\n\twidefloat_ext_float%s_from_ieee754_binary64(&value, 0.0);\n}\n", types[wf_no], types[wf_no], wf_size[wf_no]);
+		fprintf(f, "\n%s::%s (){\n\twidefloat_ext_float%s_from_ieee754_binary64(&value, NAN);\n}\n", types[wf_no], types[wf_no], wf_size[wf_no]);
 		return;
 	}
 
@@ -84,11 +84,11 @@ void cast(FILE* f, int wf_no, int cpp_no){
 
 	//signed integer
 	if(cpp_no==0 || (cpp_no<11 && cpp_no%2==1)){
-		fprintf(f, "\n%s::operator %s() const{\n\tint64_t res;\n\twidefloat_roundingmode_t mode = widefloat_ext_get_rounding_mode();\n\twidefloat_ext_convert_float%s_to_signed_integer_mode_exact(&res, &value, mode);", types[wf_no], types[cpp_no], wf_size[wf_no]);
+		fprintf(f, "\n%s::operator %s() const{\n\tint64_t res;\n\twidefloat_ext_convert_float%s_to_signed_integer_mode_exact(&res, &value, widefloat_ext_get_rounding_mode());", types[wf_no], types[cpp_no], wf_size[wf_no]);
 		//overflow risk when returned type is smaller than int64_t =long int?
 		if(strcmp(types[cpp_no], "long long int")!=0){
-			fprintf(f, "\n\tif((res < (int64_t)%s)){\n\t\tif(mode==WIDEFLOAT_ROUNDINGMODE_NEAREST || mode==WIDEFLOAT_ROUNDINGMODE_DOWN){\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INEXACT);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_OVERFLOW);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INVALID);\n\t\t}\n\t\treturn (%s)%s;\n\t}\n", range[cpp_no][0], types[cpp_no], range[cpp_no][0]);
-			fprintf(f, "\n\tif((res > (int64_t)%s)){\n\t\tif(mode==WIDEFLOAT_ROUNDINGMODE_NEAREST || mode==WIDEFLOAT_ROUNDINGMODE_UP){\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INEXACT);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_OVERFLOW);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INVALID);\n\t\t}\n\t\treturn (%s)%s;\n\t}\n", range[cpp_no][1], types[cpp_no], range[cpp_no][1]);
+			fprintf(f, "\n\tif((res < (int64_t)%s)){\n\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INVALID);\n\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INEXACT);\n\t\treturn (%s)%s;\n\t}\n", range[cpp_no][0], types[cpp_no], range[cpp_no][0]);
+			fprintf(f, "\n\tif((res > (int64_t)%s)){\n\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INVALID);\n\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INEXACT);\n\t\treturn (%s)%s;\n\t}\n", range[cpp_no][1], types[cpp_no], range[cpp_no][1]);
 		}
 		fprintf(f, "\n\treturn (%s)res;\n}\n", types[cpp_no]);
 		return;
@@ -96,9 +96,9 @@ void cast(FILE* f, int wf_no, int cpp_no){
 
 	//unsigned integer
 	if(cpp_no<11 && cpp_no%2==0){
-		fprintf(f, "\n%s::operator %s() const{\n\tuint64_t res;\n\twidefloat_roundingmode_t mode = widefloat_ext_get_rounding_mode();\n\twidefloat_ext_convert_float%s_to_unsigned_integer_mode_exact(&res, &value, mode);", types[wf_no], types[cpp_no], wf_size[wf_no]);
+		fprintf(f, "\n%s::operator %s() const{\n\tuint64_t res;\n\twidefloat_ext_convert_float%s_to_unsigned_integer_mode_exact(&res, &value, widefloat_ext_get_rounding_mode());", types[wf_no], types[cpp_no], wf_size[wf_no]);
 		if(strcmp(types[cpp_no], "unsigned long long int")!=0){
-			fprintf(f, "\n\tif((res > (uint64_t)%s)){\n\t\tif(mode==WIDEFLOAT_ROUNDINGMODE_NEAREST || mode==WIDEFLOAT_ROUNDINGMODE_UP){\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INEXACT);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_OVERFLOW);\n\t\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INVALID);\n\t\t}\n\t\treturn (%s)%s;\n\t}\n", range[cpp_no][1], types[cpp_no], range[cpp_no][1]);
+			fprintf(f, "\n\tif((res > (uint64_t)%s)){\n\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INVALID);\n\t\twidefloat_ext_raise_flags(WIDEFLOAT_FPFLAG_INEXACT);\n\t\treturn (%s)%s;\n\t}\n", range[cpp_no][1], types[cpp_no], range[cpp_no][1]);
 		}
 		fprintf(f, "\n\treturn (%s)res;\n}\n", types[cpp_no]);
 		return;

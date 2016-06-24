@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
 	f = fopen("wf_classes.hpp", "w");
 
 	//macros
-	fprintf(f, "#ifndef WF_CLASSES_HPP\n#define WF_CLASSES_HPP\n\nextern \"C\" {\n#include \"widefloat_float_types.h\"\n}\n\n#include <climits>\n");
+	fprintf(f, "#ifndef WF_CLASSES_HPP\n#define WF_CLASSES_HPP\n\nextern \"C\" {\n#include \"widefloat_float_types.h\"\n}\n");
 
 	//declaration of all widefloat classes
 	fprintf(f, "/*Declaration of all widefloat classes*/\n");
@@ -55,7 +55,7 @@ int main(int argc, char* argv[]){
 			fprintf(f, "\tfriend class %s;\n", types[j]);
 		}
 
-		fprintf(f, "\tpublic:\n\t\t//constructors\n\t\t  %s();\n", types[i]);
+		fprintf(f, "\tpublic:\n\t\t//constructors\n\t\t  %s();// sets the value to NAN\n", types[i]);
 		strcpy(type, types[i]);
 		for(j=CPP_TYPE;j<TYPE_NB;j++){//constructors
 			if(i==j){
