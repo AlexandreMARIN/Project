@@ -3,11 +3,9 @@
 
 	#define INTERP_H
 
-		#include <math.h>
-		#include "lu.h"
-		#include <stdlib.h>
-		#include <stdio.h>
 		#include "horner.h"
+		#include "lu.h"
+
 
 		void interp_poly();
 

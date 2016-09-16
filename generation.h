@@ -5,7 +5,7 @@
 #define GENERATION_H
 
 	//C++ types and new widefloat wf..._t
-	enum domain {CPP_TYPE, WF_TYPE = 13, TYPE_NB = 15};
+	enum domain {CPP_TYPE, WF_TYPE = 13, TYPE_NB = 29};
 	enum op_type {ARITH, ASSIGN = 4, COMP = 9, OP_NB = 15};
 	//for creating function prototypes
 	void function_sign(char* dest, char* prefix, char* returned_type, char* name, int arg_nb, char** arg_types, char* suffix);

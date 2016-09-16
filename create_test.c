@@ -2,15 +2,8 @@
 #include <stdio.h>
 
 
-	enum domain {CPP_TYPE, WF_TYPE = 13, TYPE_NB = 15};
-	enum op_type {ARITH, ASSIGN = 4, COMP = 9, OP_NB = 15};
-
-	const char types[][25]={"char", "signed char", "unsigned char", "short int", "unsigned short int", "int", "unsigned int", "long int", "unsigned long int", "long long int", "unsigned long long int", "float", "double", "wf256_t", "wf512_t"};
-	const char op[][4]={"+", "-", "*", "/", "=", "+=", "-=", "*=", "/=", "<", ">", "<=", ">=", "==", "!="};
-
-	const char wf_size[][5] = {"", "", "", "", "", "", "", "", "", "", "", "", "", "256", "512"};
-
-	const char range[][2][15] = {{"CHAR_MIN", "CHAR_MAX"}, {"SCHAR_MIN", "SCHAR_MAX"}, {"0", "UCHAR_MAX"}, {"SHRT_MIN", "SHRT_MAX"}, {"0", "USHRT_MAX"}, {"INT_MIN", "INT_MAX"}, {"0", "UINT_MAX"}, {"LONG_MIN", "LONG_MAX"}, {"0", "ULONG_MAX"}};
+#include "generation.h"
+#include "var.h"
 
 int main(){
 

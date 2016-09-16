@@ -1,5 +1,4 @@
 	#include "matrice.h"
-	#include <time.h>
 
 	void libere_matrice(int n, FLOTTANT** M){
 		int i;
@@ -21,7 +20,7 @@
 			for(i=0;i<*m;i++){
 				M[i]=(FLOTTANT*)malloc(sizeof(FLOTTANT)*(*n));
 				for(j=0;j<*n;j++){
-					M[i][j]=((FLOTTANT)rand()/RAND_MAX)*10.0;
+					M[i][j]=((FLOTTANT)rand()/RAND_MAX)*100.0;
 				}
 			}
 			return M;

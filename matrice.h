@@ -3,10 +3,14 @@
 
 	#define MATRICE_H
 
-		#include <stdio.h>
-		#include <stdlib.h>
+		#include <cstdio>
+		#include <cstdlib>
+		#include <ctime>
 		#include "wf_classes.hpp"
+		#ifndef FLOTTANT
 		#define FLOTTANT wf512_t
+		#endif
+		using namespace std;
 
 		void libere_matrice(int n, FLOTTANT** M);
 

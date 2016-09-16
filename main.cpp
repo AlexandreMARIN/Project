@@ -1,5 +1,4 @@
 
-	#include <stdio.h>
 	#include "horner.h"
 
 	int main(){

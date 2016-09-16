@@ -35,11 +35,11 @@
 		}
 
 		for(j=0;j<n-1;j++){
-			max=fabs(LU[j][j]);
+			max=fabs((double)LU[j][j]);
 			imax=j;
 			for(i=j+1;i<n;i++){
-				if(fabs(LU[i][j])>max){
-					max=fabs(LU[i][j]);
+				if(fabs((double)LU[i][j])>max){
+					max=fabs((double)LU[i][j]);
 					imax=i;
 				}
 			}//sélection du max de la colonne courante
@@ -78,7 +78,7 @@
 
 		int i, j;
 		P=(char**)malloc(sizeof(char*)*(n-1));//n-1 transpositions au plus
-		for(i=0;i<n;i++){
+		for(i=0;i<n-1;i++){
 			P[i]=(char*)malloc(sizeof(char)*2);
 		}
 
@@ -132,6 +132,11 @@
 			printf("\n");
 		}
 
+		for(i=0;i<n-1;i++){
+			free(P[i]);
+		}
+		free(P);
+		
 		libere_matrice(n, LU);
 		libere_matrice(n, matP);
 	}
@@ -143,8 +148,8 @@
 		char nbperm;
 
 		int i;
-		P=(char**)malloc(sizeof(char*)*n);
-		for(i=0;i<n;i++){
+		P=(char**)malloc(sizeof(char*)*(n-1));
+		for(i=0;i<n-1;i++){
 			P[i]=(char*)malloc(sizeof(char)*2);
 		}
 
@@ -160,7 +165,7 @@
 			detA*=-1.0;
 		}
 		
-		for(i=0;i<nbperm;i++){
+		for(i=0;i<n-1;i++){
 			free(P[i]);
 		}
 		free(P);
@@ -266,10 +271,10 @@
 		FLOTTANT ** LU, *X, aux, detA=1.0;
 		char** P;
 		char nbperm;
-		int i, j;
+		int i;
 
-		P=(char**)malloc(sizeof(char*)*n);
-		for(i=0;i<n;i++){
+		P=(char**)malloc(sizeof(char*)*(n-1));
+		for(i=0;i<n-1;i++){
 			P[i]=(char*)malloc(sizeof(char)*2);
 		}
 
@@ -283,9 +288,9 @@
 			detA*=LU[i][i];
 		}
 
-		if(fabs(detA)<EPSILON){
+		if(fabs((double)detA)<EPSILON){
 			free(X);
-			for(i=0;i<nbperm;i++){
+			for(i=0;i<n-1;i++){
 				free(P[i]);
 			}
 			free(P);
@@ -312,7 +317,7 @@
 		}
 
 		free(X);
-		for(i=0;i<nbperm;i++){
+		for(i=0;i<n-1;i++){
 			free(P[i]);
 		}
 		free(P);
@@ -357,8 +362,8 @@
 		b=(FLOTTANT *)calloc(n, sizeof(FLOTTANT));//b=(0,...,1,...,0)
 
 		int i, j;
-		P=(char**)malloc(sizeof(char*)*n);
-		for(i=0;i<n;i++){
+		P=(char**)malloc(sizeof(char*)*(n-1));
+		for(i=0;i<n-1;i++){
 			P[i]=(char*)malloc(sizeof(char)*2);
 		}
 
@@ -373,11 +378,11 @@
 			detA*=LU[i][i];
 		}
 
-		if(fabs(detA)<=EPSILON){
+		if(fabs((double)detA)<=EPSILON){
 			free(b);
 			free(x);
 			free(X);
-			for(i=0;i<nbperm;i++){
+			for(i=0;i<n-1;i++){
 				free(P[i]);
 			}
 			free(P);
@@ -414,7 +419,7 @@
 		free(b);
 		free(x);
 		free(X);
-		for(i=0;i<nbperm;i++){
+		for(i=0;i<n-1;i++){
 			free(P[i]);
 		}
 		free(P);

@@ -2,9 +2,7 @@
 	#ifndef LU_H
 
 	#define LU_H
-		#include <math.h>
-		#include <stdio.h>
-		#include <stdlib.h>
+		#include <cmath>
 		#include "matrice.h"
 
 		void mult_mat(int, int, int, FLOTTANT**, FLOTTANT**, FLOTTANT**);

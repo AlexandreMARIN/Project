@@ -7,19 +7,29 @@ int main(int argc, char* argv[]){
 
 	FILE* f;
 	int i, j, k;
-
 	f = fopen("wf_classes.cpp", "w");
 
-	//macros
-	fprintf(f, "#define __STDC_CONSTANT_MACROS\n#define __STDC_LIMIT_MACROS//these macros are not included by default in C++\n#include \"widefloat_float.h\"");
+	if(argc<2){
+		printf("number of parameters for create_cpp_ext : 2\n");
+		return 1;
+	}
 
-	fprintf(f, "\n\n\n#include \"wf_classes.hpp\"\n\n#include <climits> //for the highest values of integers\n#include <cmath> //for NAN\n\n\n");
+	if(strcmp(argv[1], "1")==0){//way to compile
+		//macros
+		fprintf(f, "extern \"C\" {\n#include \"widefloat_float_ext.h\"\n}\n\n\n#include \"wf_classes.hpp\"\n\n#include <climits> //for the highest values of integers\n#include <cmath> //for NAN\n\n\n");
 
-	//tool for global state
-	fprintf(f, "\n\n\t/* functions regarding global state (setters, getters, function for raising) */\nwidefloat_flags_t wf_fpstate::get_flags(){\n\treturn widefloat_get_flags();\n}\n\nint wf_fpstate::set_flags(widefloat_flags_t newflags){\n\treturn widefloat_set_flags(newflags);\n}\n\nint wf_fpstate::raise_flags(widefloat_flags_t newflags){\n\treturn widefloat_raise_flags(newflags);\n}\n\nwidefloat_roundingmode_t wf_fpstate::get_rounding_mode(){\n\treturn widefloat_get_rounding_mode();\n}\n\nint wf_fpstate::set_rounding_mode(widefloat_roundingmode_t new_rounding_mode){\n\treturn widefloat_set_rounding_mode(new_rounding_mode);\n}\n\n");
+		//tool for global state
+		fprintf(f, "\n\n\t/* functions regarding global state (setters, getters, function for raising) */\nwidefloat_flags_t wf_fpstate::get_flags(){\n\treturn widefloat_ext_get_flags();\n}\n\nint wf_fpstate::set_flags(widefloat_flags_t newflags){\n\treturn widefloat_ext_set_flags(newflags);\n}\n\nint wf_fpstate::raise_flags(widefloat_flags_t newflags){\n\treturn widefloat_ext_raise_flags(newflags);\n}\n\nwidefloat_roundingmode_t wf_fpstate::get_rounding_mode(){\n\treturn widefloat_ext_get_rounding_mode();\n}\n\nint wf_fpstate::set_rounding_mode(widefloat_roundingmode_t new_rounding_mode){\n\treturn widefloat_ext_set_rounding_mode(new_rounding_mode);\n}\n\n");
+	}else{
+		//macros
+		fprintf(f, "extern \"C\" {\n#include \"widefloat_header.h\"\n}\n\n\n#include \"wf_classes.hpp\"\n\n#include <climits> //for the highest values of integers\n#include <cmath> //for NAN\n\n\n");
+
+		//tool for global state
+		fprintf(f, "\n\n\t/* functions regarding global state (setters, getters, function for raising) */\nwidefloat_flags_t wf_fpstate::get_flags(){\n\treturn widefloat_get_flags();\n}\n\nint wf_fpstate::set_flags(widefloat_flags_t newflags){\n\treturn widefloat_set_flags(newflags);\n}\n\nint wf_fpstate::raise_flags(widefloat_flags_t newflags){\n\treturn widefloat_raise_flags(newflags);\n}\n\nwidefloat_roundingmode_t wf_fpstate::get_rounding_mode(){\n\treturn widefloat_get_rounding_mode();\n}\n\nint wf_fpstate::set_rounding_mode(widefloat_roundingmode_t new_rounding_mode){\n\treturn widefloat_set_rounding_mode(new_rounding_mode);\n}\n\n");
+	}
 
 	//wf classes members
-	fprintf(f, "\n\n\t/* definition of members and functions for widefloat classes */\n\n");
+	fprintf(f, "\n\n\t/* definition of members for widefloat classes */\n\n");
 
 	//constructors
 	fprintf(f, "\n\t/* constructors */\n");

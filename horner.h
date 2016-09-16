@@ -5,8 +5,6 @@
 
 	#define HORNER_H
 
-	#include <stdlib.h>
-	#include <stdio.h>
 	#include "matrice.h"
 
 	typedef struct polynome_ {

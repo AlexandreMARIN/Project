@@ -201,7 +201,7 @@ int main(int argc, char* argv[]){
 		//Unary + -
 		fprintf(f, "\n\n\t\t/* unary + and - */\n\t\t%s operator+ () const;\n\t\t%s operator- () const;\n", types[i], types[i]);
 
-		//sqrt : towards smaller wf types/friendship with functions which use the widefloat (therefore it is the returned type)
+		//sqrt : towards smaller wf types/friendship with functions which use the widefloat
 		fprintf(f, "\n\t\t/* square root */\n");
 		for(j=WF_TYPE;j<=i;j++){
 			fprintf(f, "\n\t\tfriend %s sqrt_to_%s(const %s &);", types[j], types[j], types[i]);
